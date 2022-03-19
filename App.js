@@ -1,12 +1,13 @@
+import { setStatusBarBackgroundColor } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, Alert, Modal,} from 'react-native';
 import { Data } from './components/data';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
 
-  //const [todo, setTodo] = useState();
-  //const [todos, setTodos] = useState([]);
   const [clicked, setClicked] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const toggle = (index) => {
     //Alert.alert("Player 1 is Winner");
@@ -18,6 +19,70 @@ export default function App() {
     }
     setClicked(index);
   };
+
+  const [title, setTitle] = useState();
+  const [desc, setDesc] = useState();
+
+  const handleAddTodo = () => {
+    console.log(title,desc);
+    const data = {
+      title: title,
+      description: desc,
+      favorite: 0,
+    }
+    Data.push(data)
+    storeData(data);
+    getData();
+    getMultiple();
+  }
+
+  const storeData = async (data) => {
+    try {
+      const datatostring = JSON.stringify(data)
+      await AsyncStorage.setItem('@storage_Key', datatostring)
+      console.log('store success')
+    } catch (e) {
+      // saving error
+    }
+  }
+
+  const getAllKeys = async () => {
+    let keys = []
+    try {
+      keys = await AsyncStorage.getAllKeys()
+    } catch(e) {
+      // read key error
+    }
+  
+    console.log(keys)
+    // example console.log result:
+    // ['@MyApp_user', '@MyApp_key']
+  }
+
+  const getData = async () => {
+    try {
+      const gdata = await AsyncStorage.getItem('@storage_Key')
+      console.log(JSON.parse(gdata))
+      return gdata != null ? JSON.parse(gdata) : null
+    } catch(e) {
+      // read error
+    }
+  
+  }
+
+  const getMultiple = async () => {
+
+    let values
+    try {
+      values = await AsyncStorage.multiGet(['@storage_Key', '@MyApp_key'])
+    } catch(e) {
+      // read error
+    }
+    console.log(values)
+  
+    // example console.log output:
+    // [ ['@MyApp_user', 'myUserValue'], ['@MyApp_key', 'myKeyValue'] ]
+  }
 
 
   return (
@@ -64,9 +129,39 @@ export default function App() {
         })}
       </View>
       
-      <TouchableOpacity style={{position: 'absolute',top: 600,left: 280}}>
+      <TouchableOpacity style={{position: 'absolute',top: 600,left: 280}} onPress={() => setModalVisible(true)}>
         <Image style={styles.addbutton} source={require('./pictures/add-icon.png')}></Image>
       </TouchableOpacity>
+
+      <Modal animationType='fade' transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(!modalVisible)}>
+        <View style={[styles.modalcontainer]}>
+
+          <TouchableOpacity style={[{height: 28, width: 28, left: 265}]} onPress={() => setModalVisible(!modalVisible)}>
+            <Image style={styles.modalexit} source={require('./pictures/exit.png')}></Image>        
+          </TouchableOpacity>
+
+          <Text style={{fontFamily: 'Roboto', fontSize: 20, fontWeight: 'bold', marginBottom: 16, textAlign: 'center'}}>Add To Do</Text>
+          
+          <View style={{flexDirection: 'column', alignItems: "center", justifyContent: "center"}}>
+            
+            <Text style={styles.modalheader}>Title</Text>
+            <TextInput style={[styles.modaltextinput,{marginBottom: 15}]} placeholder={'title...'} onChangeText={title=> setTitle(title)}></TextInput>
+
+          </View>
+
+          <View style={{flexDirection: 'column', alignItems: "center", justifyContent: "center"}}>
+            
+            <Text style={styles.modalheader}>Description</Text>
+            <TextInput style={[styles.modaltextinput,{marginBottom: 15}]} placeholder={'description...'} onChangeText={desc=> setDesc(desc)}></TextInput>
+
+          </View>
+
+          <TouchableOpacity style={styles.submit} onPress={() => handleAddTodo()}>
+            <Text style={{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', top: 2, color:'#FFF'}}>Submit</Text>
+          </TouchableOpacity>
+
+        </View>
+      </Modal>
 
     </View>
   );
@@ -158,4 +253,46 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     alignItems: "center", 
   },
+  modalcontainer:{
+    position: 'absolute',
+    width: 292,
+    height: 285,
+    left: 42,
+    top: 199,
+    borderRadius: 15,
+    backgroundColor: '#ededed',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 30
+  },
+  modalexit: {
+    height: 25,
+    width: 25,
+  },
+  modalheader: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modaltextinput: {
+    width: 236,
+    height: 32,
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    paddingHorizontal: 15,
+  },
+  submit: {
+    backgroundColor: '#5d2cb8',
+    width: 80,
+    height: 35,
+    borderRadius: 10,
+    alignSelf: 'center',
+    marginTop: 4,
+  }
 });
