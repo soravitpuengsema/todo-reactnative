@@ -1,6 +1,5 @@
-import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Data } from './components/data';
 
 export default function App() {
@@ -9,14 +8,14 @@ export default function App() {
   //const [todos, setTodos] = useState([]);
   const [clicked, setClicked] = useState(false);
 
-  const toggle = index => {
+  const toggle = (index) => {
+    //Alert.alert("Player 1 is Winner");
     console.log('toggle')
     if (clicked === index) {
       console.log('close')
       //if clicked question is already active, then close it
       return setClicked(null);
     }
-
     setClicked(index);
   };
 
@@ -29,7 +28,7 @@ export default function App() {
         <Text style={styles.paragraphtext}>Friday, March 18</Text>
       </View>
 
-      <View style={[{flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 15, marginTop: 6}]}>
+      <View style={[{flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 1, marginTop: 8}]}>
 
         <TextInput style={[styles.searchbar,{marginLeft: 8,}]} placeholder={'ค้นหารายการ...'}></TextInput>
 
@@ -39,27 +38,29 @@ export default function App() {
 
       </View>
 
-      <View style={styles.todolist}>
+      <View>
         {Data.map((todo, index) => {
           return (
-          <>
-            <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onClick={() => toggle(index)} key={index}>
+            <>
+              <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)} key={index}>
 
-              <TouchableOpacity style={{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}}>
-                <Image style={styles.star} source={require('./pictures/transstar.png')}></Image>
+                <TouchableOpacity style={[{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}]}>
+                  <Image style={styles.star} source={require('./pictures/transstar.png')}></Image>
+                </TouchableOpacity>
+
+                <Text style={[styles.todotext,{width: 310, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
+
               </TouchableOpacity>
 
-              <Text style={[styles.todotext,{width: 310, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
+              {clicked == index ? 
+                <View styles={[styles.bordertest,styles.dropdownedit]}>
+                  <Text style={[styles.todotext]}>{todo.description}</Text>
+                  <Text style={[styles.todotext]}>{todo.favorite}</Text>
+                </View> 
+                : null}
 
-            </TouchableOpacity>
-            {clicked === index ? (
-              <View styles={styles.dropdownedit}>
-                <Text>{todo.description}</Text>
-                <Text>{todo.favorite}</Text>
-              </View>
-            ) : null}
             </>
-          );
+            );
         })}
       </View>
       
@@ -128,15 +129,13 @@ const styles = StyleSheet.create({
     height: 100,
     width: 100,
   },
-  todolist: {
-    bottom: 8,
-  },
   todo: {
     width: 358,
     //height: 41,
     backgroundColor: '#fff',
     borderRadius: 10,
-    marginBottom: 14,
+    marginTop: 7,
+    marginBottom: 7,
     flexDirection: "row",
     alignItems: "center", 
     //display: 'flex',
@@ -151,6 +150,12 @@ const styles = StyleSheet.create({
     width: 22,
   },
   dropdownedit: {
-
+    width: 358,
+    top: 20,
+    left: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 14,
+    alignItems: "center", 
   },
 });
