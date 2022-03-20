@@ -4,7 +4,7 @@ import { StatusBar, StyleSheet,View,TouchableOpacity, TextInput, Alert, Modal, S
 import { Button, Text } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
-//import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 //import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 export default function App() {
@@ -14,7 +14,7 @@ export default function App() {
     return timeNow;
   }
 
-  const [date, setDate] = useState(new Date(1598051730000));
+  const [date, setDate] = useState(new Date(Date.now()));
   const [mode, setMode] = useState('date');
   const [show, setShow] = useState(false);
 
@@ -36,8 +36,6 @@ export default function App() {
   const showTimepicker = () => {
     showMode('time');
   };
-
-
 
   const [clicked, setClicked] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -76,10 +74,11 @@ export default function App() {
     setData([...Data, data]);
     setTitle(null);
     setDesc(null);
+    setDate(new Date(Date.now()))
     //console.log(data);
     setDataShow([...DataShow, data]);
     //console.log('DataShow',DataShow);
-    //console.log('Data',Data);
+    console.log('Data',Data);
   }
 
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -119,12 +118,12 @@ export default function App() {
     forceUpdate();
   }
 
-  const [search, setSearch] = useState();
+  const [search, setSearch] = useState('');
 
   const handleSearch = (text) => {
     console.log(text);
 
-    if ( text == ''){
+    if ( text == '' ){
 
       DataShow.splice(0, DataShow.length);
       for (var i = 0 ; i < Data.length ; i++) {
@@ -148,6 +147,46 @@ export default function App() {
     }
   }
 
+  const [editInput, setEditInput] = useState([])
+
+  const getEditData = (index) => {
+    console.log('BEFORE EDIT',DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].date)
+    setEditInput([DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].date])
+
+    setTitle(DataShow[index].title)
+    setDesc(DataShow[index].description)
+    setDate()
+
+  }
+
+  const [editVisible, setEditVisible] = useState(false);
+
+  const handleEdit = (date) => {
+    const getIDEdit = editInput[2]
+    console.log(getIDEdit);
+    const indexDataEdit = Data.findIndex((o => o.id == getIDEdit))
+
+    console.log(title,desc)
+    
+    Data[indexDataEdit].title = title;
+    Data[indexDataEdit].description = desc;
+    Data[indexDataEdit].date = date;
+
+    setTitle(null);
+    setDesc(null);
+
+    DataShow.splice(0, DataShow.length);
+
+    for (var j = 0 ; j < Data.length ; j++) {
+      DataShow.push(Data[j]);
+    }
+
+    if (search != ''){
+      handleSearch(search);
+    }
+
+    forceUpdate();
+  }
 
   return (
     <View style={styles.container}>
@@ -189,7 +228,7 @@ export default function App() {
                       <Text style={[styles.todotext,{width: 260, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
                     </View>
 
-                    <TouchableOpacity style={[styles.edit]}>
+                    <TouchableOpacity style={[styles.edit]} onPress={() => [getEditData(index),setEditVisible(true)]}>
                       <Image style={[{width:23,height:23}]} source={require('./pictures/edit.png')}></Image>
                     </TouchableOpacity>
 
@@ -201,7 +240,7 @@ export default function App() {
 
                   {clicked == index ? 
                     <View style={[styles.dropdownedit]}>
-                      <Text style={[styles.todotext,{marginTop: 5, width: '90%',alignSelf: 'center',marginBottom: 7,}]}>{todo.id}</Text>
+                      <Text style={[styles.todotext,{marginTop: 5, width: '90%',alignSelf: 'center',marginBottom: 7,}]}>{todo.description}</Text>
                       <Text style={[styles.todotext,{textAlign: 'center',marginBottom: 10}]}>Due Date: {todo.duedate}</Text>
                     </View> 
                     : null}
@@ -261,6 +300,59 @@ export default function App() {
 
             </View>
           </Modal>
+
+
+
+          <Modal animationType='fade' transparent={true} visible={editVisible} onRequestClose={() => setEditVisible(!editVisible)}>
+            <View style={[styles.modalcontainer]}>
+
+              <TouchableOpacity style={[{height: 28, width: 28, left: 265}]} onPress={() => setEditVisible(!editVisible)}>
+                <Image style={styles.modalexit} source={require('./pictures/exit.png')}></Image>        
+              </TouchableOpacity>
+
+              <Text style={{fontFamily: 'Roboto', fontSize: 20, fontWeight: 'bold', marginBottom: 16, textAlign: 'center'}}>Edit To Do</Text>
+              
+              <View style={{flexDirection: 'column', alignItems: "center", justifyContent: "center"}}>
+                
+                <Text style={styles.modalheader}>Title</Text>
+                <TextInput style={[styles.modaltextinput,{marginBottom: 15}]} placeholder={'title...'} value={title} editable={true} onChangeText={title=> setTitle(title)}></TextInput>
+
+              </View>
+
+              <View style={{flexDirection: 'column', alignItems: "center", justifyContent: "center"}}>
+                
+                <Text style={styles.modalheader}>Description</Text>
+                <TextInput style={[styles.modaltextinput,{marginBottom: 15}]} placeholder={'description...'} value={desc} editable={true} onChangeText={desc=> setDesc(desc)}></TextInput>
+
+              </View>
+
+              <View style={{flexDirection: 'row', alignItems: "center", justifyContent: "center"}}>
+                <View style={{marginBottom: 10,marginTop: 10, marginRight: 10, width: '40%',alignSelf: 'center',}}>
+                  <Button style ={{backgroundColor: '#5d2cb8',}} onPress={showDatepicker} title="Pick Due Date" />
+                </View>
+                <View style={{marginBottom: 10,marginTop: 10, marginLeft: 10, width: '40%',alignSelf: 'center',}}>
+                  <Button onPress={showTimepicker} title="Pick Due Time" />
+                </View>
+                {show && (
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={date}
+                    mode={mode}
+                    is24Hour={true}
+                    onChange={onChange}
+                  />
+                )}
+              </View>
+
+              <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
+
+              <TouchableOpacity style={[styles.submit]} onPress={() => [handleEdit(date.toLocaleString()),setEditVisible(!editVisible)]}>
+                <Text style={[{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', color:'#FFF', position: 'relative',top: '20%'}]}>Submit</Text>
+              </TouchableOpacity>
+
+            </View>
+          </Modal>
+
 
 
       </View>
