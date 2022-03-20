@@ -1,10 +1,12 @@
 import { setStatusBarBackgroundColor } from 'expo-status-bar';
 import React, { useState, useEffect , useReducer , useCallback } from 'react';
 import { StatusBar, StyleSheet,View,TouchableOpacity, TextInput, Alert, Modal, ScrollView,Image,} from 'react-native';
-import { Button, Text } from 'react-native-elements';
+import { Button, SocialIcon, Text } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FloatingAction } from "react-native-floating-action";
 //import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 export default function App() {
@@ -84,15 +86,45 @@ export default function App() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   const handleStarClick = (index) => {
-    Data[index].favorite = !Data[index].favorite;
-    if(Data[index].favorite == true){
-      const dataTemp = Data[index];
-      Data.splice(index,1);
+    const getIDStar = DataShow[index].id
+    console.log(getIDStar);
+    const indexDataStar = Data.findIndex((o => o.id == getIDStar))
+    Data[indexDataStar].favorite = !Data[indexDataStar].favorite
+
+    if(Data[indexDataStar].favorite == true){
+      const dataTemp = Data[indexDataStar];
+      Data.splice(indexDataStar,1);
       Data.unshift(dataTemp);
+
+      DataShow.splice(0, DataShow.length);
+
+      for (var j = 0 ; j < Data.length ; j++) {
+        DataShow.push(Data[j]);
+      }
+  
+      if (search != ''){
+        handleSearch(search);
+      }
+  
+      forceUpdate();
+
     } else {
-      const dataTemp = Data[index];
-      Data.splice(index,1);
+      const dataTemp = Data[indexDataStar];
+      Data.splice(indexDataStar,1);
       Data.push(dataTemp);
+
+      DataShow.splice(0, DataShow.length);
+
+      for (var j = 0 ; j < Data.length ; j++) {
+        DataShow.push(Data[j]);
+      }
+  
+      if (search != ''){
+        handleSearch(search);
+      }
+  
+      forceUpdate();
+
     }
   }
 
@@ -150,18 +182,17 @@ export default function App() {
   const [editInput, setEditInput] = useState([])
 
   const getEditData = (index) => {
-    console.log('BEFORE EDIT',DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].date)
-    setEditInput([DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].date])
+    console.log('BEFORE EDIT',DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].duedate)
+    setEditInput([DataShow[index].title, DataShow[index].description, DataShow[index].id, DataShow[index].duedate])
 
     setTitle(DataShow[index].title)
     setDesc(DataShow[index].description)
-    setDate()
 
   }
 
   const [editVisible, setEditVisible] = useState(false);
 
-  const handleEdit = (date) => {
+  const handleEdit = () => {
     const getIDEdit = editInput[2]
     console.log(getIDEdit);
     const indexDataEdit = Data.findIndex((o => o.id == getIDEdit))
@@ -170,7 +201,7 @@ export default function App() {
     
     Data[indexDataEdit].title = title;
     Data[indexDataEdit].description = desc;
-    Data[indexDataEdit].date = date;
+    Data[indexDataEdit].duedate = date.toLocaleString();
 
     setTitle(null);
     setDesc(null);
@@ -193,9 +224,7 @@ export default function App() {
 
           <StatusBar hidden={false} ></StatusBar>
 
-          <TouchableOpacity style={[{position: 'absolute', bottom: 10, right: 10},]} onPress={() => setModalVisible(true)}>
-            <Image style={styles.addbutton} source={require('./pictures/add-icon.png')}></Image>
-          </TouchableOpacity>
+          
 
           <View style={styles.headerbg}>
             <Text style={styles.headertext}>My Day</Text>
@@ -211,44 +240,48 @@ export default function App() {
             </TouchableOpacity>
 
           </View>
+        <SafeAreaView style={{maxHeight: 530}}>
+          <ScrollView>
+          
+            <View style={{marginTop: -7}}>
+              {DataShow.map((todo, index) => {
+                return (
+                  <>
+                    <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)} activeOpacity={0.7}>
 
-          <View style={{marginTop: -7}}>
-            {DataShow.map((todo, index) => {
-              return (
-                <>
-                  <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)}>
+                      <TouchableOpacity style={[{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}]} onPress={() => [handleStarClick(index),console.log(Data),forceUpdate()]}>
+                        {todo.favorite ?
+                          <Image style={styles.star} source={require('./pictures/goldstar.png')}></Image>
+                          : <Image style={styles.star} source={require('./pictures/transstar.png')}></Image>}
+                      </TouchableOpacity>
 
-                    <TouchableOpacity style={[{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}]} onPress={() => [handleStarClick(index),console.log(Data),forceUpdate()]}>
-                      {todo.favorite ?
-                        <Image style={styles.star} source={require('./pictures/goldstar.png')}></Image>
-                        : <Image style={styles.star} source={require('./pictures/transstar.png')}></Image>}
+                      <View>
+                        <Text style={[styles.todotext,{width: 260, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
+                      </View>
+
+                      <TouchableOpacity style={[styles.edit]} onPress={() => [getEditData(index),setEditVisible(true)]}>
+                        <Image style={[{width:23,height:23}]} source={require('./pictures/edit.png')}></Image>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={[styles.trash]} onPress={() => [handleDelete(index),forceUpdate()]}>
+                        <Image style={[{width:23,height:23}]} source={require('./pictures/trash.png')}></Image>
+                      </TouchableOpacity>
+
                     </TouchableOpacity>
 
-                    <View>
-                      <Text style={[styles.todotext,{width: 260, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
-                    </View>
+                    {clicked == index ? 
+                      <View style={[styles.dropdownedit]}>
+                        <Text style={[styles.todotext,{marginTop: 5, width: '90%',alignSelf: 'center',marginBottom: 7,}]}>{todo.description}</Text>
+                        <Text style={[styles.todotext,{textAlign: 'center',marginBottom: 10}]}>Due Date: {todo.duedate}</Text>
+                      </View> 
+                      : null}
 
-                    <TouchableOpacity style={[styles.edit]} onPress={() => [getEditData(index),setEditVisible(true)]}>
-                      <Image style={[{width:23,height:23}]} source={require('./pictures/edit.png')}></Image>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.trash]} onPress={() => [handleDelete(index),forceUpdate()]}>
-                      <Image style={[{width:23,height:23}]} source={require('./pictures/trash.png')}></Image>
-                    </TouchableOpacity>
-
-                  </TouchableOpacity>
-
-                  {clicked == index ? 
-                    <View style={[styles.dropdownedit]}>
-                      <Text style={[styles.todotext,{marginTop: 5, width: '90%',alignSelf: 'center',marginBottom: 7,}]}>{todo.description}</Text>
-                      <Text style={[styles.todotext,{textAlign: 'center',marginBottom: 10}]}>Due Date: {todo.duedate}</Text>
-                    </View> 
-                    : null}
-
-                </>
-                );
-            })}
-          </View>
+                  </>
+                  );
+              })}
+            </View>
+            </ScrollView>
+        </SafeAreaView>
 
 
           <Modal animationType='fade' transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(!modalVisible)}>
@@ -346,14 +379,16 @@ export default function App() {
 
               <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
 
-              <TouchableOpacity style={[styles.submit]} onPress={() => [handleEdit(date.toLocaleString()),setEditVisible(!editVisible)]}>
+              <TouchableOpacity style={[styles.submit]} onPress={() => [handleEdit(date),setEditVisible(!editVisible)]}>
                 <Text style={[{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', color:'#FFF', position: 'relative',top: '20%'}]}>Submit</Text>
               </TouchableOpacity>
 
             </View>
           </Modal>
 
-
+          <TouchableOpacity style={[styles.addbutton]} onPress={() => setModalVisible(true)} activeOpacity={0.7}>
+            <Image style={[styles.floatingButtonStyle]} source={require('./pictures/add-icon.png')}></Image>
+          </TouchableOpacity>
 
       </View>
   );
@@ -413,8 +448,13 @@ const styles = StyleSheet.create({
     width: 50,
   },
   addbutton: {
-    height: 100,
-    width: 100,
+    height: 55,
+    width: 55,
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 10,
+    bottom: 10,
   },
   todo: {
     width: 358,
@@ -496,5 +536,11 @@ const styles = StyleSheet.create({
     width: 23,
     marginLeft: 15,
     marginRight: 4,
+  },
+  floatingButtonStyle: {
+    resizeMode: 'contain',
+    width: 50,
+    height: 50,
+    //backgroundColor:'black'
   },
 });
