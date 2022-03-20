@@ -1,9 +1,11 @@
 import { setStatusBarBackgroundColor } from 'expo-status-bar';
 import React, { useState, useEffect , useReducer , useCallback } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, Alert, Modal, Button, ScrollView} from 'react-native';
+import { StatusBar, StyleSheet,View,TouchableOpacity, TextInput, Alert, Modal, ScrollView,Image,} from 'react-native';
+import { Button, Text } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+//import DateTimePicker from '@react-native-community/datetimepicker';
+//import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 export default function App() {
 
@@ -51,33 +53,39 @@ export default function App() {
     setClicked(index);
   };
 
-
+  const [DataShow, setDataShow] = useState([]);
 
   const [title, setTitle] = useState();
   const [desc, setDesc] = useState();
 
   const [Data, setData] = useState([]);
 
+  const [idnum, setID] = useState(1);
+
   const handleAddTodo = (date) => {
-    console.log(title,desc);
+    console.log(title,idnum);
     const data = 
     {
+      id: idnum,
       title: title,
       description: desc,
       favorite: false,
       duedate: date
     }
+    setID(idnum+1);
     setData([...Data, data]);
     setTitle(null);
     setDesc(null);
-    console.log(Data)
+    //console.log(data);
+    setDataShow([...DataShow, data]);
+    //console.log('DataShow',DataShow);
+    //console.log('Data',Data);
   }
 
   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   const handleStarClick = (index) => {
     Data[index].favorite = !Data[index].favorite;
-    console.log('test');
     if(Data[index].favorite == true){
       const dataTemp = Data[index];
       Data.splice(index,1);
@@ -90,15 +98,65 @@ export default function App() {
   }
 
   const handleDelete = (index) => {
-    setClicked(null)
-    Data.splice(index,1)
+    setClicked(null);  
+    //Data.splice(index,1);
+    //DataShow.splice(index,1);
+    const getID = DataShow[index].id
+    console.log(getID);
+    const indexData = Data.findIndex((o => o.id == getID))
+    Data.splice(indexData,1);
+
+    DataShow.splice(0, DataShow.length);
+
+    for (var j = 0 ; j < Data.length ; j++) {
+      DataShow.push(Data[j]);
+    }
+
+    if (search != ''){
+      handleSearch(search);
+    }
+
+    forceUpdate();
   }
+
+  const [search, setSearch] = useState();
+
+  const handleSearch = (text) => {
+    console.log(text);
+
+    if ( text == ''){
+
+      DataShow.splice(0, DataShow.length);
+      for (var i = 0 ; i < Data.length ; i++) {
+        DataShow.push(Data[i])
+      }
+      console.log('SEARCH NULL',DataShow);
+      forceUpdate();
+
+    } else { //มีการ search
+
+      DataShow.splice(0, DataShow.length);
+      console.log(Data)
+
+      for (var j = 0 ; j < Data.length ; j++) {
+        if (Data[j].title == text){
+          DataShow.push(Data[j]);
+        }
+      }
+      console.log('SEARCH ',text,DataShow);
+      forceUpdate();
+    }
+  }
+
 
   return (
     <View style={styles.container}>
-        <TouchableOpacity style={[{position: 'absolute', bottom: 10, right: 10},]} onPress={() => setModalVisible(true)}>
-          <Image style={styles.addbutton} source={require('./pictures/add-icon.png')}></Image>
-        </TouchableOpacity>
+
+          <StatusBar hidden={false} ></StatusBar>
+
+          <TouchableOpacity style={[{position: 'absolute', bottom: 10, right: 10},]} onPress={() => setModalVisible(true)}>
+            <Image style={styles.addbutton} source={require('./pictures/add-icon.png')}></Image>
+          </TouchableOpacity>
 
           <View style={styles.headerbg}>
             <Text style={styles.headertext}>My Day</Text>
@@ -107,19 +165,19 @@ export default function App() {
 
           <View style={[{flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 1, marginTop: 8}]}>
 
-            <TextInput style={[styles.searchbar,{marginLeft: 8,}]} placeholder={'ค้นหารายการ...'}></TextInput>
+            <TextInput style={[styles.searchbar,{marginLeft: 8,}]} placeholder={'ค้นหารายการ...'} onChangeText={titletext=> setSearch(titletext)}></TextInput>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => handleSearch(search)}>
               <Image style= {styles.searchicon} source={require('./pictures/search_icon.png')}></Image>
             </TouchableOpacity>
 
           </View>
 
-          <View>
-            {Data.map((todo, index) => {
+          <View style={{marginTop: -7}}>
+            {DataShow.map((todo, index) => {
               return (
                 <>
-                  <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)} key='s'>
+                  <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)}>
 
                     <TouchableOpacity style={[{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}]} onPress={() => [handleStarClick(index),console.log(Data),forceUpdate()]}>
                       {todo.favorite ?
@@ -128,8 +186,12 @@ export default function App() {
                     </TouchableOpacity>
 
                     <View>
-                      <Text style={[styles.todotext,{width: 285, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
+                      <Text style={[styles.todotext,{width: 260, left: 11, marginTop: 5, marginBottom: 8,}]}>{todo.title}</Text>
                     </View>
+
+                    <TouchableOpacity style={[styles.edit]}>
+                      <Image style={[{width:23,height:23}]} source={require('./pictures/edit.png')}></Image>
+                    </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.trash]} onPress={() => [handleDelete(index),forceUpdate()]}>
                       <Image style={[{width:23,height:23}]} source={require('./pictures/trash.png')}></Image>
@@ -138,9 +200,9 @@ export default function App() {
                   </TouchableOpacity>
 
                   {clicked == index ? 
-                    <View styles={[styles.bordertest,styles.dropdownedit]}>
-                      <Text style={[styles.todotext]}>Description: {todo.description}</Text>
-                      <Text style={[styles.todotext]}>Due Date: {todo.duedate}</Text>
+                    <View style={[styles.dropdownedit]}>
+                      <Text style={[styles.todotext,{marginTop: 5, width: '90%',alignSelf: 'center',marginBottom: 7,}]}>{todo.id}</Text>
+                      <Text style={[styles.todotext,{textAlign: 'center',marginBottom: 10}]}>Due Date: {todo.duedate}</Text>
                     </View> 
                     : null}
 
@@ -148,6 +210,7 @@ export default function App() {
                 );
             })}
           </View>
+
 
           <Modal animationType='fade' transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(!modalVisible)}>
             <View style={[styles.modalcontainer]}>
@@ -193,11 +256,13 @@ export default function App() {
               <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
 
               <TouchableOpacity style={[styles.submit]} onPress={() => [handleAddTodo(date.toLocaleString()),setModalVisible(!modalVisible)]}>
-                <Text style={{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', top: 2, color:'#FFF'}}>Submit</Text>
+                <Text style={[{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', color:'#FFF', position: 'relative',top: '20%'}]}>Submit</Text>
               </TouchableOpacity>
 
             </View>
           </Modal>
+
+
       </View>
   );
 }
@@ -264,8 +329,7 @@ const styles = StyleSheet.create({
     //height: 41,
     backgroundColor: '#fff',
     borderRadius: 10,
-    marginTop: 7,
-    marginBottom: 7,
+    marginTop: 14,
     flexDirection: "row",
     alignItems: "center", 
     //display: 'flex',
@@ -281,21 +345,20 @@ const styles = StyleSheet.create({
   },
   dropdownedit: {
     width: 358,
-    top: 20,
-    left: 20,
     backgroundColor: '#fff',
     borderRadius: 10,
-    marginBottom: 14,
-    alignItems: "center", 
+    marginBottom: 10,
+    //alignItems: "center", 
   },
   modalcontainer:{
     //position: 'absolute',
     width: 292,
-    height: 600,
+    height: 430,
     alignSelf: 'center',
     //left: 42,
     //top: 199,
-    top: '7%',
+    position: 'absolute',
+    top: '20%',
     borderRadius: 15,
     backgroundColor: '#ededed',
     shadowColor: "#000",
@@ -326,8 +389,8 @@ const styles = StyleSheet.create({
   },
   submit: {
     backgroundColor: '#5d2cb8',
-    width: 80,
-    height: 35,
+    width: 85,
+    height: 40,
     borderRadius: 10,
     alignSelf: 'center',
     marginTop: 10,
@@ -335,6 +398,11 @@ const styles = StyleSheet.create({
   trash: {
     height: 23,
     width: 23,
+  },
+  edit: {
+    height: 23,
+    width: 23,
     marginLeft: 15,
+    marginRight: 4,
   },
 });
