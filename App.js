@@ -21,7 +21,7 @@ export default function App() {
   const [show, setShow] = useState(false);
 
   const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate;
+    const currentDate = selectedDate || new Date();
     setShow(false);
     setDate(currentDate);
   };
@@ -39,10 +39,10 @@ export default function App() {
     showMode('time');
   };
 
-  const [clicked, setClicked] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [clicked, setClicked] = useState(null);
 
   const toggle = (index) => {
+    console.log('toggle',index)
     //Alert.alert("Player 1 is Winner");
     //console.log('toggle')
     if (clicked === index) {
@@ -52,6 +52,8 @@ export default function App() {
     }
     setClicked(index);
   };
+
+  const [modalVisible, setModalVisible] = useState(false);
 
   const [DataShow, setDataShow] = useState([]);
 
@@ -80,7 +82,7 @@ export default function App() {
     //console.log(data);
     setDataShow([...DataShow, data]);
     //console.log('DataShow',DataShow);
-    console.log('Data',Data);
+    console.log('Add',Data);
   }
 
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -235,7 +237,7 @@ export default function App() {
 
             <TextInput style={[styles.searchbar,{marginLeft: 8,}]} placeholder={'ค้นหารายการ...'} onChangeText={titletext=> setSearch(titletext)}></TextInput>
 
-            <TouchableOpacity onPress={() => handleSearch(search)}>
+            <TouchableOpacity onPress={() => handleSearch(search)} activeOpacity={0.7}>
               <Image style= {styles.searchicon} source={require('./pictures/search_icon.png')}></Image>
             </TouchableOpacity>
 
@@ -247,7 +249,7 @@ export default function App() {
               {DataShow.map((todo, index) => {
                 return (
                   <>
-                    <TouchableOpacity style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)} activeOpacity={0.7}>
+                    <TouchableOpacity key={index} style={[styles.todo,{alignSelf: 'flex-start'}]} onPress={() => toggle(index)} activeOpacity={0.7}>
 
                       <TouchableOpacity style={[{left: 6, marginTop: 5, marginBottom: 5, marginLeft: 2, marginRight: 2,}]} onPress={() => [handleStarClick(index),console.log(Data),forceUpdate()]}>
                         {todo.favorite ?
@@ -308,11 +310,11 @@ export default function App() {
               </View>
 
               <View style={{flexDirection: 'row', alignItems: "center", justifyContent: "center"}}>
-                <View style={{marginBottom: 10,marginTop: 10, marginRight: 10, width: '40%',alignSelf: 'center',}}>
-                  <Button style ={{backgroundColor: '#5d2cb8',}} onPress={showDatepicker} title="Pick Due Date" />
+                <View style={[{marginBottom: 10,marginTop: 10, marginRight: 3, width: '45%',alignSelf: 'center',borderRadius: 10,}]}>
+                  <Button style ={{color: '#5d2cb8',}} onPress={showDatepicker} title="Pick Due Date" />
                 </View>
-                <View style={{marginBottom: 10,marginTop: 10, marginLeft: 10, width: '40%',alignSelf: 'center',}}>
-                  <Button onPress={showTimepicker} title="Pick Due Time" />
+                <View style={[{marginBottom: 10,marginTop: 10, marginLeft: 3, width: '45%',alignSelf: 'center',borderRadius: 10,}]}>
+                  <Button style ={{color: `'#5d2cb8'`,}} onPress={showTimepicker} title="Pick Due Time" />
                 </View>
                 {show && (
                   <DateTimePicker
@@ -327,7 +329,7 @@ export default function App() {
 
               <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
 
-              <TouchableOpacity style={[styles.submit]} onPress={() => [handleAddTodo(date.toLocaleString()),setModalVisible(!modalVisible)]}>
+              <TouchableOpacity style={[styles.submit]} onPress={() => [handleAddTodo(date.toLocaleString()),setModalVisible(!modalVisible)]} activeOpacity={0.7}>
                 <Text style={[{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', color:'#FFF', position: 'relative',top: '20%'}]}>Submit</Text>
               </TouchableOpacity>
 
@@ -360,11 +362,11 @@ export default function App() {
               </View>
 
               <View style={{flexDirection: 'row', alignItems: "center", justifyContent: "center"}}>
-                <View style={{marginBottom: 10,marginTop: 10, marginRight: 10, width: '40%',alignSelf: 'center',}}>
-                  <Button style ={{backgroundColor: '#5d2cb8',}} onPress={showDatepicker} title="Pick Due Date" />
+                <View style={[{marginBottom: 10,marginTop: 10, marginRight: 3, width: '45%',alignSelf: 'center',borderRadius: 10,}]}>
+                  <Button style ={{color: '#5d2cb8',}} onPress={showDatepicker} title="Pick Due Date" />
                 </View>
-                <View style={{marginBottom: 10,marginTop: 10, marginLeft: 10, width: '40%',alignSelf: 'center',}}>
-                  <Button onPress={showTimepicker} title="Pick Due Time" />
+                <View style={[{marginBottom: 10,marginTop: 10, marginLeft: 3, width: '45%',alignSelf: 'center',borderRadius: 10,}]}>
+                <Button style ={{color: '#5d2cb8',}} onPress={showTimepicker} title="Pick Due Time" />
                 </View>
                 {show && (
                   <DateTimePicker
@@ -377,11 +379,13 @@ export default function App() {
                 )}
               </View>
 
-              <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
+              {}
+                <Text style={[styles.todotext,{textAlign: 'center',marginTop: 5, marginBottom: 5,}]}>Selected: {date.toLocaleString()}</Text>
 
-              <TouchableOpacity style={[styles.submit]} onPress={() => [handleEdit(date),setEditVisible(!editVisible)]}>
+              <TouchableOpacity style={[styles.submit]} onPress={() => [handleEdit(date),setEditVisible(!editVisible)]} activeOpacity={0.7}>
                 <Text style={[{fontSize: 20,fontFamily: 'Roboto', fontWeight: 'bold', textAlign: 'center', color:'#FFF', position: 'relative',top: '20%'}]}>Submit</Text>
               </TouchableOpacity>
+
 
             </View>
           </Modal>
